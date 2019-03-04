@@ -1,0 +1,32 @@
+<launch>
+
+  <!-- Set the param that trajectory_execution_manager needs to find the controller plugin -->
+  <arg name="moveit_controller_manager" default="moveit_simple_controller_manager/MoveItSimpleControllerManager"/>
+  <param name="moveit_controller_manager" value="$(arg moveit_controller_manager)"/>
+
+  <!-- load controller_list -->
+  <rosparam file="$(find arm_moveit)/config/controllers.yaml"/>
+
+
+<launch>
+
+  <rosparam command="load" file="$(find arm_moveit)/config/controllers.yaml"/>
+
+  <include file="$(find arm_moveit)/launch/planning_context.launch" >
+    <arg name="load_robot_description" value="true" />
+  </include>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="/use_gui" value="false"/>
+    <rosparam param="/source_list">[/sia10f/joint_states]</rosparam>
+  </node>
+
+  <include file="$(find myrobot_moveit_config)/launch/move_group.launch">
+    <arg name="publish_monitored_planning_scene" value="true" />
+  </include>
+
+  <include file="$(find myrobot_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
+
+</launch>

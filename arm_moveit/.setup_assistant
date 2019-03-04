@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: zobov_description
+    relative_path: urdf/zobov_arm.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/zobov_arm.srdf
+  CONFIG:
+    author_name: Alexander Lopez
+    author_email: lopez.alexander@pucp.pe
+    generated_timestamp: 1551582638

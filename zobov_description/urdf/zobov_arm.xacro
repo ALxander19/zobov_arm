@@ -1,0 +1,237 @@
+<?xml version="1.0" ?>
+
+<robot name="zobov_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+<!-- BGN - Include -->
+  <xacro:include filename="$(find zobov_description)/urdf/robot_parameters.xacro" />
+  <xacro:include filename="$(find zobov_description)/urdf/links_joints.xacro" />
+<!-- END - Include -->
+
+<!-- BGN - World description -->
+  
+  <!-- World frame (for Gazebo) -->
+  <link name="world"/>
+
+  <!-- Arm fixed to world frame  -->
+  <joint name="world_box" type="fixed">
+    <parent link="world"/>
+    <child link="table"/>
+  </joint>
+
+  <m_link_mesh name="table" color="gold"
+              origin_rpy="1.57 0 0" origin_xyz="0 0 0"
+              mass="157.633"
+              ixx="13.235" ixy="0" ixz="0"
+              iyy="13.235" iyz="0"
+              izz="9.655"
+              meshfile_stl="package://zobov_description/meshes/table.stl"
+              meshfile_dae="package://zobov_description/meshes/table.dae"
+              meshscale="0.001 0.001 0.001" />
+
+  <gazebo reference="table">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+
+  <joint name="table_${link_00_name}" type="fixed">
+    <parent link="table" origin_xyz="0 0 0"/>
+    <child link="${link_00_name}"/>
+  </joint>
+
+<!-- END - World description -->
+
+
+<!-- BGN - Depth Camera description -->
+
+  <joint name="world__camera_base" type="fixed">
+    <parent link="world"/>
+    <child link="camera_base"/>
+  </joint>
+
+  <m_link_cylinder name="camera_base"
+              origin_rpy="0 0 0" origin_xyz="-0.6 0.3 0.4"
+              mass="3000.0"
+              radius="0.05" length="0.8" />
+
+  <joint name="base_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="-0.6 0.3 0.825" rpy="0 0 0"/>
+    <parent link="camera_base"/>
+    <child link="${camera_name}"/>
+  </joint>
+
+  <link name="${camera_name}">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="0.05 0.1 0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.1 0.05"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <gazebo reference="${camera_name}">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="${camera_name}">
+    <sensor type="depth" name="openni_camera_camera">       
+        <always_on>1</always_on>
+        <visualize>true</visualize>             
+        <camera>
+            <horizontal_fov>1.047</horizontal_fov>  
+            <image>
+                <width>640</width>
+                <height>480</height>
+                <format>R8G8B8</format>
+            </image>
+            <depth_camera>
+
+            </depth_camera>
+            <clip>
+                <near>0.1</near>
+                <far>100</far>
+            </clip>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
+            <alwaysOn>true</alwaysOn>
+                <updateRate>10.0</updateRate>
+                <cameraName>camera</cameraName>
+                <frameName>openni_camera_link</frameName>                   
+            <imageTopicName>rgb/image_raw</imageTopicName>
+            <depthImageTopicName>depth/image_raw</depthImageTopicName>
+            <pointCloudTopicName>depth/points</pointCloudTopicName>
+            <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>              
+            <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>            
+            <pointCloudCutoff>0.4</pointCloudCutoff>                
+                <hackBaseline>0.07</hackBaseline>
+                <distortionK1>0.0</distortionK1>
+                <distortionK2>0.0</distortionK2>
+                <distortionK3>0.0</distortionK3>
+                <distortionT1>0.0</distortionT1>
+                <distortionT2>0.0</distortionT2>
+            <CxPrime>0.0</CxPrime>
+            <Cx>0.0</Cx>
+            <Cy>0.0</Cy>
+            <focalLength>0.0</focalLength>
+        </plugin>
+    </sensor>
+  </gazebo>
+
+<!-- END - Depth Camera description -->
+
+
+<!-- BGN - Robot description -->
+
+  <m_link_cylinder name="${link_00_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0.5 0.715"
+              mass="1000.0"
+              radius="0.05" length="0.03" />
+
+  <m_joint name="${link_00_name}__${link_01_name}" type="revolute"
+           axis_xyz="0 0 1"
+           origin_rpy="0 0 -1.57" origin_xyz="0 ${origin_y} ${base_l+origin_z}"
+           parent="${link_00_name}" child="${link_01_name}"
+           limit_e="1000" limit_l="-3.00" limit_u="3.00" limit_v="0.5" />
+  
+
+  <m_link_cylinder name="${link_01_name}"
+              origin_rpy="0 0 0" origin_xyz="${origin_x} 0 ${link_01_l/2}"
+              mass="500.0"
+              radius="${link_01_r}" length="${link_01_l}" />
+   
+  <m_joint name="${link_01_name}__${link_02_name}" type="revolute"
+           axis_xyz="0 1 0"
+           origin_rpy="0 0 0" origin_xyz="0 0 ${link_01_l}"
+           parent="${link_01_name}" child="${link_02_name}"
+           limit_e="1000" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+           
+  <m_link_cylinder name="${link_02_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0 ${link_02_l/2}"
+              mass="200.0"
+              radius="${link_02_r}" length="${link_02_l}" />
+              
+  <m_joint name="${link_02_name}__${link_03_name}" type="revolute"
+           axis_xyz="0 1 0"
+           origin_rpy="0 0 0" origin_xyz="0 0 ${link_02_l}"
+           parent="${link_02_name}" child="${link_03_name}"
+           limit_e="1000" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+           
+  <m_link_cylinder name="${link_03_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0 ${link_03_l/2}"
+              mass="200.0"
+              radius="${link_03_r}" length="${link_03_l}" />
+              
+  <m_joint name="${link_03_name}__${link_04_name}" type="revolute"
+           axis_xyz="0 1 0"
+           origin_rpy="0 0 0" origin_xyz="0 0 ${link_03_l}"
+           parent="${link_03_name}" child="${link_04_name}"
+           limit_e="1000" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+           
+  <m_link_cylinder name="${link_04_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0 ${link_04_l/2}"
+              mass="50.0"
+              radius="${link_04_r}" length="${link_04_l}" />
+            
+  <m_joint name="${link_04_name}__${link_05_name}" type="revolute"
+           axis_xyz="0 0 1"
+           origin_rpy="0 0 0" origin_xyz="0 0 ${link_04_l}"
+           parent="${link_04_name}" child="${link_05_name}"
+           limit_e="1000" limit_l="-3.0" limit_u="3.0" limit_v="0.5" />
+    
+  <m_link_cylinder name="${link_05_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0 ${link_05_l/2}"
+              mass="50.0"
+              radius="${link_05_r}" length="${link_05_l}" />
+  
+  <m_joint name="${link_05_name}__${gripper_name}" type="revolute"
+           axis_xyz="0 0 1"
+           origin_rpy="0 0 0" origin_xyz="0 0 ${link_05_l}"
+           parent="${link_05_name}" child="${gripper_name}"
+           limit_e="1000" limit_l="-3.0" limit_u="3.0" limit_v="0.5" />
+
+  <m_link_cylinder name="${gripper_name}"
+              origin_rpy="0 0 0" origin_xyz="0 0 ${gripper_l/2}"
+              mass="10.0"
+              radius="${gripper_r}" length="${gripper_l}" />  
+
+<!-- END - Robot description -->
+
+<!-- BGN - Tryout  >
+  <joint name="world_tryout" type="fixed">
+    <parent link="world"/>
+    <child link="tryout"/>
+  </joint>
+
+  <m_link_cylinder name="tryout"
+              origin_rpy="0 0 0" origin_xyz="0 0.3 0.9"
+              mass="1.0"
+              radius="0.025" length="0.05" /-->  
+
+<!-- END - Tryout  -->
+
+<!-- BGN - Gazebo Plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>true</legacyModeNS>
+    </plugin>
+  </gazebo>
+<!-- END - Gazebo Plugin -->
+
+</robot>
